@@ -1,0 +1,26 @@
+$excelsource = '\\fileshare.domain.local\Store\ExcelFile.xlsx'
+$repo = 'C:\Repository\TEMP'
+if ((Get-Date).AddMinutes(-60) -le (Get-Item -Path $excelsource).LastWriteTime) 
+{
+$ErrorActionPreference = 'Stop'
+Copy-Item -Path $excelsource -Destination $repo -Force
+$excel = 'C:\Repository\TEMP\ExcelFile.xlsx'
+
+Function Convert-xlsxtocsv
+{
+$ExcelFile = Get-ChildItem -Path $excel -Recurse
+$excelApp = New-Object -ComObject Excel.Application
+$excelApp.DisplayAlerts = $false
+$excelApp.Visible = $false
+$workbook = $excelApp.Workbooks.Open($ExcelFile.FullName)
+$csvFilePath = $ExcelFile.FullName -replace "\.xlsx$", ".csv"
+$workbook.SaveAs($csvFilePath, [Microsoft.Office.Interop.Excel.XlFileFormat]::xlCSVWindows) # xlCSVWindows, xlCSVMSDOS, xlCSV
+$workbook.Close()
+$excelApp.Workbooks.Close()
+$excelApp.Visible = $false
+Start-Sleep 1
+$excelApp.Quit()
+	[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excelApp) | Out-Null
+}
+Convert-xlsxtocsv
+}
